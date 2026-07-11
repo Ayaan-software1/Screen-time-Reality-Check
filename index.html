@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Screen Time Calculator & Reality Check</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at top, rgba(30, 64, 175, 0.15), transparent 40%),
+        #020617;
+    }
+
+    input[type="range"] {
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: linear-gradient(to right, #38bdf8 var(--fill), #1e293b var(--fill));
+      outline: none;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      background: #e0f2fe;
+      border: 4px solid #0ea5e9;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
+      transition: transform 0.1s;
+    }
+    
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      background: #e0f2fe;
+      border: 4px solid #0ea5e9;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
+      transition: transform 0.1s;
+    }
+
+    input[type="range"]::-moz-range-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    .phone-fill {
+      transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .chart-bar {
+      transition: height 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .fade {
+      animation: fadeIn 0.4s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .glass {
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+  </style>
+</head>
+
+<body class="min-h-screen text-slate-100 font-sans selection:bg-sky-500/30">
+  <main class="w-full max-w-6xl mx-auto px-5 py-8 md:py-12">
+
+    <header class="mb-10 md:mb-14 text-center md:text-left">
+      <div class="inline-flex items-center gap-2 border border-sky-900/50 bg-sky-950/30 rounded-full px-4 py-2 text-xs text-sky-300 mb-6 shadow-[0_0_15px_rgba(14,165,233,0.15)]">
+        <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+        7-Tage Reality Check
+      </div>
+
+      <h1 class="text-4xl md:text-6xl font-bold tracking-tight mb-4 text-transparent bg-clip-text bg-gradient-to-r from-sky-300 via-sky-400 to-indigo-400 drop-shadow-sm">
+        Screen Time Calculator
+      </h1>
+
+      <p class="text-slate-400 max-w-2xl text-base md:text-lg leading-relaxed mx-auto md:mx-0">
+        Trage deine tägliche Bildschirmzeit ein. Nach 7 Tagen zeigt dir das Tool visuell,
+        was diese Zeit auch hätte sein können.
+      </p>
+    </header>
+
+    <section class="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 md:gap-8">
+
+      <div class="space-y-6 md:space-y-8">
+
+        <section id="logView" class="glass border border-slate-800/80 shadow-2xl shadow-black/50 rounded-[2rem] p-6 md:p-10 fade">
+
+          <div class="flex items-center justify-between mb-8">
+            <div>
+              <p class="text-xs uppercase tracking-[0.2em] text-sky-500/80 font-bold mb-1">Heute eintragen</p>
+              <h2 id="dayTitle" class="text-3xl font-semibold tracking-tight">Tag 1 von 7</h2>
+            </div>
+
+            <div class="text-right">
+              <p class="text-xs uppercase tracking-[0.2em] text-slate-500 mb-1">Fortschritt</p>
+              <p id="progressText" class="text-sky-400 font-bold text-lg">0 / 7</p>
+            </div>
+          </div>
+
+          <div class="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden mb-10 shadow-inner">
+            <div id="progressBar" class="h-full bg-gradient-to-r from-sky-500 to-sky-300 rounded-full transition-all duration-700 ease-out shadow-[0_0_10px_rgba(56,189,248,0.5)]" style="width: 0%"></div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-[1fr_220px] gap-10 items-center">
+
+            <div>
+              <div class="mb-8">
+                <p class="text-sm font-medium text-slate-400 mb-2">Bildschirmzeit</p>
+
+                <div class="flex items-end gap-3">
+                  <span id="hoursDisplay" class="text-7xl md:text-8xl font-light tracking-tighter text-white drop-shadow-md">0.0</span>
+                  <span class="text-2xl text-slate-500 mb-3 font-medium">Std.</span>
+                </div>
+              </div>
+
+              <input
+                id="timeSlider"
+                type="range"
+                min="0"
+                max="6"
+                step="0.25"
+                value="0"
+                style="--fill: 0%"
+              />
+
+              <div class="flex justify-between text-xs font-medium text-slate-500 mt-4 px-1">
+                <span>0h</span>
+                <span>3h</span>
+                <span>6h</span>
+              </div>
+
+              <div class="mt-10 grid grid-cols-2 md:grid-cols-4 gap-3">
+                <button data-value="0.5" class="quickBtn border border-slate-700/60 bg-slate-800/30 hover:bg-sky-500/10 hover:border-sky-400/60 hover:text-sky-300 rounded-xl py-3 text-sm text-slate-300 font-medium transition-all duration-200">30 Min</button>
+                <button data-value="1" class="quickBtn border border-slate-700/60 bg-slate-800/30 hover:bg-sky-500/10 hover:border-sky-400/60 hover:text-sky-300 rounded-xl py-3 text-sm text-slate-300 font-medium transition-all duration-200">1 Std.</button>
+                <button data-value="2" class="quickBtn border border-slate-700/60 bg-slate-800/30 hover:bg-sky-500/10 hover:border-sky-400/60 hover:text-sky-300 rounded-xl py-3 text-sm text-slate-300 font-medium transition-all duration-200">2 Std.</button>
+                <button data-value="4" class="quickBtn border border-slate-700/60 bg-slate-800/30 hover:bg-sky-500/10 hover:border-sky-400/60 hover:text-sky-300 rounded-xl py-3 text-sm text-slate-300 font-medium transition-all duration-200">4 Std.</button>
+              </div>
+            </div>
+
+            <div class="flex justify-center relative">
+              <div class="absolute inset-0 bg-sky-500/20 blur-3xl rounded-full scale-75 z-0"></div>
+              
+              <div class="relative w-36 h-64 rounded-[2.2rem] border-4 border-slate-700 bg-slate-950 overflow-hidden shadow-2xl z-10 ring-1 ring-black/50">
+                <div class="absolute top-3 left-1/2 -translate-x-1/2 w-14 h-1.5 rounded-full bg-slate-800 z-20"></div>
+
+                <div class="absolute inset-2.5 rounded-[1.6rem] bg-slate-900 overflow-hidden shadow-inner">
+                  <div id="phoneFill" class="phone-fill absolute bottom-0 left-0 right-0 bg-gradient-to-t from-sky-500 to-sky-300 opacity-90" style="height: 0%"></div>
+
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <div class="text-center drop-shadow-lg">
+                      <p class="text-4xl mb-2 filter drop-shadow-md">📱</p>
+                      <p id="phonePercent" class="text-sm text-white font-bold tracking-wide">0%</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="mt-10 border border-slate-800/60 bg-slate-950/40 rounded-2xl p-6 shadow-inner">
+            <p class="text-xs uppercase tracking-[0.2em] text-slate-500 font-semibold mb-5 text-center md:text-left">Direkter Gegenwert</p>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+              <div class="p-3 rounded-xl hover:bg-slate-800/30 transition-colors">
+                <div class="text-3xl mb-2">📖</div>
+                <div id="previewPages" class="text-2xl font-bold text-white mb-1">0</div>
+                <p class="text-xs text-slate-400 font-medium">Seiten lesen</p>
+              </div>
+
+              <div class="p-3 rounded-xl hover:bg-slate-800/30 transition-colors">
+                <div class="text-3xl mb-2">🚶</div>
+                <div id="previewWalks" class="text-2xl font-bold text-white mb-1">0</div>
+                <p class="text-xs text-slate-400 font-medium">Spaziergänge</p>
+              </div>
+
+              <div class="p-3 rounded-xl hover:bg-slate-800/30 transition-colors">
+                <div class="text-3xl mb-2">🍽️</div>
+                <div id="previewMeals" class="text-2xl font-bold text-white mb-1">0</div>
+                <p class="text-xs text-slate-400 font-medium">Mahlzeiten</p>
+              </div>
+
+              <div class="p-3 rounded-xl hover:bg-slate-800/30 transition-colors">
+                <div class="text-3xl mb-2">🌳</div>
+                <div id="previewOutside" class="text-2xl font-bold text-white mb-1">0h</div>
+                <p class="text-xs text-slate-400 font-medium">Zeit draussen</p>
+              </div>
+            </div>
+          </div>
+
+          <button id="saveBtn" class="mt-8 w-full bg-sky-400 hover:bg-sky-300 text-slate-950 font-bold text-lg py-4 rounded-2xl transition-all duration-300 hover:shadow-[0_0_25px_rgba(56,189,248,0.4)] active:scale-[0.98]">
+            Tag speichern
+          </button>
+
+        </section>
+
+        <section id="dashboardView" class="hidden glass border border-slate-800/80 shadow-2xl rounded-[2rem] p-6 md:p-10 fade">
+
+          <div class="flex items-center justify-between mb-8">
+            <div>
+              <p class="text-xs uppercase tracking-[0.2em] text-sky-500/80 font-bold mb-1">Auswertung</p>
+              <h2 class="text-3xl font-semibold tracking-tight">Deine Woche</h2>
+            </div>
+
+            <button id="resetBtn" class="text-sm font-medium text-slate-400 hover:text-red-400 bg-slate-900 hover:bg-red-500/10 px-4 py-2 rounded-full transition-colors border border-slate-800">
+              Neu starten
+            </button>
+          </div>
+
+          <div class="border border-slate-800/60 bg-gradient-to-b from-slate-900/80 to-slate-950/80 rounded-3xl p-8 text-center mb-8 shadow-inner relative overflow-hidden">
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-sky-500/10 blur-3xl rounded-full"></div>
+            <p class="text-sm font-medium text-slate-400 mb-3 relative z-10">Gesamte Bildschirmzeit</p>
+            <div class="relative z-10">
+              <span id="totalHours" class="text-7xl md:text-8xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-sky-500">0</span>
+              <span class="text-2xl text-slate-500 font-medium">Std.</span>
+            </div>
+            <p id="summaryText" class="text-slate-400 mt-5 font-medium relative z-10"></p>
+          </div>
+
+          <div class="grid grid-cols-3 gap-4 mb-8">
+            <div class="border border-slate-800/50 bg-slate-900/40 rounded-2xl p-5 text-center hover:bg-slate-800/40 transition-colors">
+              <p class="text-xs text-slate-500 font-medium mb-2">Ø pro Tag</p>
+              <p id="avgHours" class="text-3xl font-bold text-white">0h</p>
+            </div>
+
+            <div class="border border-slate-800/50 bg-slate-900/40 rounded-2xl p-5 text-center hover:bg-slate-800/40 transition-colors">
+              <p class="text-xs text-slate-500 font-medium mb-2">Tiefster Tag</p>
+              <p id="minHours" class="text-3xl font-bold text-emerald-400">0h</p>
+            </div>
+
+            <div class="border border-slate-800/50 bg-slate-900/40 rounded-2xl p-5 text-center hover:bg-slate-800/40 transition-colors">
+              <p class="text-xs text-slate-500 font-medium mb-2">Höchster Tag</p>
+              <p id="maxHours" class="text-3xl font-bold text-rose-400">0h</p>
+            </div>
+          </div>
+
+          <div class="border border-slate-800/50 bg-slate-900/30 rounded-3xl p-6 mb-8 shadow-inner">
+            <p class="text-xs uppercase tracking-[0.2em] text-slate-500 font-semibold mb-6">Tagesverlauf</p>
+
+            <div id="chart" class="flex items-end gap-3 h-48">
+              </div>
+
+            <div id="chartLabels" class="flex gap-3 mt-4 font-medium">
+              </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="border border-slate-800/50 bg-slate-900/40 rounded-3xl p-6 text-center hover:scale-[1.02] transition-transform">
+              <div class="text-5xl mb-4 drop-shadow-md">📖</div>
+              <p id="booksValue" class="text-4xl font-bold text-white mb-1">0</p>
+              <p class="text-sm font-medium text-slate-400">Bücher gelesen</p>
+            </div>
+
+            <div class="border border-slate-800/50 bg-slate-900/40 rounded-3xl p-6 text-center hover:scale-[1.02] transition-transform">
+              <div class="text-5xl mb-4 drop-shadow-md">🚶</div>
+              <p id="walksValue" class="text-4xl font-bold text-white mb-1">0</p>
+              <p class="text-sm font-medium text-slate-400">Spaziergänge</p>
+            </div>
+
+            <div class="border border-slate-800/50 bg-slate-900/40 rounded-3xl p-6 text-center hover:scale-[1.02] transition-transform">
+              <div class="text-5xl mb-4 drop-shadow-md">🍽️</div>
+              <p id="mealsValue" class="text-4xl font-bold text-white mb-1">0</p>
+              <p class="text-sm font-medium text-slate-400">Ohne Bildschirm</p>
+            </div>
+
+            <div class="border border-slate-800/50 bg-slate-900/40 rounded-3xl p-6 text-center hover:scale-[1.02] transition-transform">
+              <div class="text-5xl mb-4 drop-shadow-md">🌳</div>
+              <p id="outsideValue" class="text-4xl font-bold text-white mb-1">0h</p>
+              <p class="text-sm font-medium text-slate-400">Zeit draussen</p>
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+
+      <aside class="space-y-6 md:space-y-8">
+
+        <section class="glass border border-slate-800/80 rounded-3xl p-6 shadow-xl">
+          <div class="flex items-center gap-2 mb-5">
+            <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-sky-400">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0z"/>
+                <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
+              </svg>
+            </div>
+            <p class="text-xs uppercase tracking-[0.2em] text-slate-400 font-semibold">Gespeicherte Tage</p>
+          </div>
+          
+          <div id="savedList" class="space-y-3">
+            </div>
+        </section>
+
+        <section class="glass border border-slate-800/60 bg-gradient-to-br from-slate-900/50 to-slate-950/50 rounded-3xl p-6 text-slate-400 text-sm leading-relaxed shadow-lg relative overflow-hidden">
+          <div class="absolute top-0 right-0 p-4 opacity-10 text-5xl">💡</div>
+          <p class="relative z-10 font-medium">
+            Die Werte sind einfache Vergleiche. Sie sollen deine Zeiten nicht streng bewerten,
+            sondern die investierte Bildschirmzeit einfach ein bisschen greifbarer machen.
+          </p>
+        </section>
+
+      </aside>
+
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "screen_time_visual_entries";
+
+    const timeSlider = document.getElementById("timeSlider");
+    const hoursDisplay = document.getElementById("hoursDisplay");
+    const phoneFill = document.getElementById("phoneFill");
+    const phonePercent = document.getElementById("phonePercent");
+
+    const previewPages = document.getElementById("previewPages");
+    const previewWalks = document.getElementById("previewWalks");
+    const previewMeals = document.getElementById("previewMeals");
+    const previewOutside = document.getElementById("previewOutside");
+
+    const saveBtn = document.getElementById("saveBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    const logView = document.getElementById("logView");
+    const dashboardView = document.getElementById("dashboardView");
+
+    const dayTitle = document.getElementById("dayTitle");
+    const progressText = document.getElementById("progressText");
+    const progressBar = document.getElementById("progressBar");
+    const savedList = document.getElementById("savedList");
+
+    const totalHours = document.getElementById("totalHours");
+    const avgHours = document.getElementById("avgHours");
+    const minHours = document.getElementById("minHours");
+    const maxHours = document.getElementById("maxHours");
+    const summaryText = document.getElementById("summaryText");
+
+    const chart = document.getElementById("chart");
+    const chartLabels = document.getElementById("chartLabels");
+
+    const booksValue = document.getElementById("booksValue");
+    const walksValue = document.getElementById("walksValue");
+    const mealsValue = document.getElementById("mealsValue");
+    const outsideValue = document.getElementById("outsideValue");
+
+    const quickBtns = document.querySelectorAll(".quickBtn");
+
+    const dayNames = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+
+    function getEntries() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveEntries(entries) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    }
+
+    function formatHours(value) {
+      return `${value.toFixed(1)}h`;
+    }
+
+    function updateSlider() {
+      const value = Number(timeSlider.value);
+      const fill = (value / 6) * 100;
+
+      timeSlider.style.setProperty("--fill", `${fill}%`);
+      hoursDisplay.textContent = value.toFixed(1);
+
+      phoneFill.style.height = `${fill}%`;
+      phonePercent.textContent = `${Math.round(fill)}%`;
+
+      const minutes = value * 60;
+
+      const pages = Math.round(minutes * 0.3);
+      const walks = Math.floor(minutes / 30);
+      const meals = Math.floor(minutes / 45);
+      const outside = value.toFixed(1);
+
+      previewPages.textContent = pages;
+      previewWalks.textContent = walks;
+      previewMeals.textContent = meals;
+      previewOutside.textContent = `${outside}h`;
+    }
+
+    function renderSavedList(entries) {
+      savedList.innerHTML = "";
+
+      if (entries.length === 0) {
+        savedList.innerHTML = `
+          <div class="text-center py-6 border border-dashed border-slate-700/50 rounded-2xl">
+            <p class="text-slate-500 text-sm font-medium">Noch keine Daten vorhanden.</p>
+          </div>
+        `;
+        return;
+      }
+
+      entries.forEach((entry, index) => {
+        const row = document.createElement("div");
+        row.className = "flex items-center justify-between border border-slate-700/50 bg-slate-900/60 rounded-xl px-4 py-3 hover:border-sky-900 transition-colors";
+
+        row.innerHTML = `
+          <span class="text-slate-300 font-medium">Tag ${index + 1}</span>
+          <div class="flex items-center gap-4">
+            <span class="text-sky-400 font-bold bg-sky-900/30 px-2 py-0.5 rounded-md">${formatHours(entry)}</span>
+            <button class="text-xs text-slate-500 hover:text-red-400 font-medium transition-colors" data-index="${index}">
+              Entfernen
+            </button>
+          </div>
+        `;
+
+        row.querySelector("button").addEventListener("click", () => {
+          const current = getEntries();
+          current.splice(index, 1);
+          saveEntries(current);
+          init();
+        });
+
+        savedList.appendChild(row);
+      });
+    }
+
+    function renderLog(entries) {
+      const day = entries.length + 1;
+      const progress = (entries.length / 7) * 100;
+
+      dayTitle.textContent = `Tag ${day} von 7`;
+      progressText.textContent = `${entries.length} / 7`;
+      progressBar.style.width = `${progress}%`;
+
+      timeSlider.value = 0;
+      updateSlider();
+
+      renderSavedList(entries);
+    }
+
+    function renderChart(entries) {
+      chart.innerHTML = "";
+      chartLabels.innerHTML = "";
+
+      const max = Math.max(...entries, 0.1);
+
+      entries.forEach((value, index) => {
+        const height = Math.max((value / max) * 100, 5);
+
+        const barWrap = document.createElement("div");
+        barWrap.className = "flex-1 flex flex-col items-center justify-end h-full group";
+
+        const number = document.createElement("div");
+        number.className = "text-xs font-bold text-sky-200 mb-2 opacity-0 group-hover:opacity-100 transition-opacity -translate-y-2 group-hover:translate-y-0 duration-200";
+        number.textContent = value.toFixed(1);
+
+        const bar = document.createElement("div");
+        bar.className = "chart-bar w-full rounded-t-xl bg-gradient-to-t from-sky-600 to-sky-400 group-hover:from-sky-500 group-hover:to-sky-300 transition-colors shadow-[0_0_10px_rgba(56,189,248,0.2)] group-hover:shadow-[0_0_15px_rgba(56,189,248,0.5)]";
+        bar.style.height = "0%";
+
+        barWrap.appendChild(number);
+        barWrap.appendChild(bar);
+        chart.appendChild(barWrap);
+
+        requestAnimationFrame(() => {
+          bar.style.height = `${height}%`;
+        });
+
+        const label = document.createElement("div");
+        label.className = "flex-1 text-center text-xs text-slate-500 font-medium";
+        label.textContent = dayNames[index] || `T${index + 1}`;
+        chartLabels.appendChild(label);
+      });
+    }
+
+    function renderDashboard(entries) {
+      const total = entries.reduce((sum, value) => sum + value, 0);
+      const avg = total / entries.length;
+      const min = Math.min(...entries);
+      const max = Math.max(...entries);
+
+      totalHours.textContent = total.toFixed(1);
+      avgHours.textContent = formatHours(avg);
+      minHours.textContent = formatHours(min);
+      maxHours.textContent = formatHours(max);
+
+      summaryText.textContent = `Das entspricht durchschnittlich ${avg.toFixed(1)} Stunden pro Tag.`;
+
+      const totalMinutes = total * 60;
+
+      booksValue.textContent = Math.floor(total / 6);
+      walksValue.textContent = Math.floor(totalMinutes / 30);
+      mealsValue.textContent = Math.floor(totalMinutes / 45);
+      outsideValue.textContent = `${total.toFixed(1)}h`;
+
+      renderChart(entries);
+      renderSavedList(entries);
+    }
+
+    function showLog() {
+      logView.classList.remove("hidden");
+      dashboardView.classList.add("hidden");
+    }
+
+    function showDashboard() {
+      logView.classList.add("hidden");
+      dashboardView.classList.remove("hidden");
+    }
+
+    function init() {
+      const entries = getEntries();
+
+      if (entries.length >= 7) {
+        renderDashboard(entries);
+        showDashboard();
+      } else {
+        renderLog(entries);
+        showLog();
+      }
+    }
+
+    timeSlider.addEventListener("input", updateSlider);
+
+    quickBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        timeSlider.value = btn.dataset.value;
+        updateSlider();
+      });
+    });
+
+    saveBtn.addEventListener("click", () => {
+      const entries = getEntries();
+
+      if (entries.length >= 7) return;
+
+      entries.push(Number(timeSlider.value));
+      saveEntries(entries);
+
+      init();
+    });
+
+    resetBtn.addEventListener("click", () => {
+      localStorage.removeItem(STORAGE_KEY);
+      init();
+    });
+
+    updateSlider();
+    init();
+  </script>
+</body>
+</html>
